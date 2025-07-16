@@ -1,0 +1,65 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "title": "Getting Started with Python",
+      "slug": "getting-started-with-python",
+      "content": "Python is a great programming language...",
+      "excerpt": "Learn the basics of Python programming",
+      "author": {
+        "id": 123,
+        "username": "johndoe",
+        "display_name": "John Doe"
+      },
+      "published_at": "2024-01-10T14:30:00Z",
+      "updated_at": "2024-01-12T09:15:00Z",
+      "tags": [
+        "python",
+        "programming",
+        "tutorial"
+      ],
+      "category": "Programming",
+      "status": "published",
+      "view_count": 1250,
+      "like_count": 89,
+      "comment_count": 12
+    },
+    {
+      "id": 2,
+      "title": "Advanced Python Concepts",
+      "slug": "advanced-python-concepts",
+      "content": "Dive deeper into Python with these concepts...",
+      "excerpt": "Advanced techniques for Python developers",
+      "author": {
+        "id": 123,
+        "username": "johndoe",
+        "display_name": "John Doe"
+      },
+      "published_at": "2024-01-14T16:45:00Z",
+      "updated_at": "2024-01-14T16:45:00Z",
+      "tags": [
+        "python",
+        "advanced",
+        "programming"
+      ],
+      "category": "Programming",
+      "status": "published",
+      "view_count": 892,
+      "like_count": 67,
+      "comment_count": 8
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 10,
+    "total_pages": 5,
+    "total_items": 42,
+    "has_next": true,
+    "has_previous": false
+  },
+  "meta": {
+    "request_id": "req_abc123",
+    "response_time_ms": 145,
+    "cache_hit": false
+  }
+}

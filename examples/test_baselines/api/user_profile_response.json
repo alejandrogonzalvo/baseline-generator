@@ -1,0 +1,26 @@
+{
+  "id": 123,
+  "username": "johndoe",
+  "email": "john.doe@example.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "is_active": true,
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-15T10:30:00Z",
+  "profile": {
+    "bio": "Software developer",
+    "location": "San Francisco, CA",
+    "website": "https://johndoe.dev",
+    "avatar_url": "https://example.com/avatars/johndoe.jpg"
+  },
+  "preferences": {
+    "email_notifications": true,
+    "theme": "dark",
+    "language": "en-US"
+  },
+  "stats": {
+    "posts_count": 42,
+    "followers_count": 150,
+    "following_count": 75
+  }
+}

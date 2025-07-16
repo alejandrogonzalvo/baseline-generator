@@ -1,0 +1,12 @@
+{
+  "id": 123,
+  "username": "johndoe",
+  "email": "john.doe@example.com",
+  "is_active": true,
+  "profile": {
+    "bio": "Software developer"
+  },
+  "stats": {
+    "posts_count": 42
+  }
+}

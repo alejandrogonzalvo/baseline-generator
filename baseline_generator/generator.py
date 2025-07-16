@@ -203,7 +203,7 @@ class BaselineGenerator:
         Returns:
             True if there's a type mismatch, False otherwise.
         """
-        if type(baseline) != type(test_data):
+        if type(baseline) is not type(test_data):
             differences.append(
                 f"{current_path}: Type mismatch - baseline: {type(baseline).__name__}, "
                 f"test: {type(test_data).__name__}"
