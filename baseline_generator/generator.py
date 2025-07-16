@@ -138,7 +138,8 @@ class BaselineGenerator:
                 )
             else:
                 raise BaselineNotFoundError(
-                    f"Baseline '{baseline_name}' not found in {self.test_folder}"
+                    f"Baseline '{baseline_name}' not found in {self.test_folder}", 
+                    baseline_path,
                 )
 
         # Load existing baseline and compare
