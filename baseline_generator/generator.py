@@ -108,7 +108,7 @@ class BaselineGenerator:
         self,
         baseline_name: str,
         test_data: dict[str, Any],
-        create_if_missing: bool = True,
+        create_if_missing: bool = False,
     ) -> None:
         """Test data against an existing baseline.
 
@@ -137,7 +137,7 @@ class BaselineGenerator:
                     baseline_path,
                 )
             else:
-                raise FileNotFoundError(
+                raise BaselineNotFoundError(
                     f"Baseline '{baseline_name}' not found in {self.test_folder}"
                 )
 
