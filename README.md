@@ -1,6 +1,5 @@
 # Baseline Generator
 
-[![License](https://img.shields.io/github/license/alejandrogonzalvo/baseline-generator.svg?)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://img.shields.io/pypi/v/baseline-generator.svg)](https://pypi.org/project/baseline-generator/)
 [![Python Version](https://img.shields.io/pypi/pyversions/baseline-generator)](https://pypi.org/project/baseline-generator/)
 [![Downloads](https://img.shields.io/pypi/dm/baseline-generator.svg)](https://pypi.org/project/baseline-generator/)
@@ -11,13 +10,8 @@
 A Python package for generating and managing JSON test baselines with ease.
 
 ## Features
-
-- 🔍 **Check baseline existence** - Verify if baseline files exist in your test folder
-- 📁 **Load baselines** - Load and work with existing baseline JSON files
 - 🏗️ **Generate baselines** - Create new baseline files with data validation
 - ✅ **Test against baselines** - Compare test data with baselines and get detailed difference reports
-- 🛡️ **Type Safety** - Full type hints with mypy enforcement
-- 🧪 **Well Tested** - Comprehensive test suite with 100% coverage on core functionality
 - 🎯 **CLI Tool** - Command-line interface for easy baseline management
 
 ## Installation
