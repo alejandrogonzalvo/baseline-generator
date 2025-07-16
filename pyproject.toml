@@ -1,0 +1,122 @@
+[tool.poetry]
+name = "baseline-generator"
+version = "0.1.0"
+description = "A Python package for generating and managing test baselines"
+authors = ["Alejandro <alejandro@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "baseline_generator"}]
+
+[tool.poetry.scripts]
+baseline-generator = "baseline_generator.cli:main"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.7.0"
+black = "^23.0.0"
+isort = "^5.12.0"
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+python-semantic-release = "^8.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+# isort configuration
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["baseline_generator"]
+
+# mypy configuration
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+extra_checks = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+# pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=baseline_generator --cov-report=html --cov-report=term-missing"
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["baseline_generator"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+] 
+
+# python-semantic-release configuration
+[tool.semantic_release]
+version_toml = ["pyproject.toml:tool.poetry.version"]
+build_command = "poetry build"
+dist_path = "dist/"
+upload_to_pypi = true
+upload_to_release = true
+commit_author = "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = ["build", "chore", "ci", "docs", "feat", "fix", "perf", "style", "refactor", "test"]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+
+[tool.semantic_release.remote.token]
+env = "GH_TOKEN"
+
+[tool.semantic_release.changelog]
+template_dir = "templates"
+changelog_file = "CHANGELOG.md" 

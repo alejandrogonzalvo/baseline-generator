@@ -1,0 +1,25 @@
+{
+  "api_response": {
+    "status": "success",
+    "data": {
+      "users": [
+        {
+          "id": 1,
+          "name": "Alice",
+          "active": true
+        },
+        {
+          "id": 2,
+          "name": "Bob",
+          "active": false
+        }
+      ],
+      "total_count": 2,
+      "page": 1
+    },
+    "metadata": {
+      "timestamp": "2024-01-01T10:00:00Z",
+      "version": "1.0.0"
+    }
+  }
+}

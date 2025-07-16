@@ -1,0 +1,22 @@
+{
+  "test_case": "example_baseline",
+  "expected_output": {
+    "status": "success",
+    "data": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "metadata": {
+      "timestamp": "2024-01-01T00:00:00Z",
+      "version": "1.0.0"
+    }
+  },
+  "configuration": {
+    "timeout": 30,
+    "retries": 3,
+    "debug": false
+  }
+}
