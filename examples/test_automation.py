@@ -8,17 +8,20 @@ for automated testing scenarios.
 
 import sys
 from pathlib import Path
-import json
 
 # Add the parent directory to the path so we can import baseline_generator
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from baseline_generator import BaselineGenerator, BaselineComparisonError, BaselineNotFoundError
+from baseline_generator import (
+    BaselineGenerator,
+    BaselineComparisonError,
+    BaselineNotFoundError,
+)
 
 
 class DataProcessor:
     """A sample class that processes data - what we'll be testing."""
-    
+
     def process_user_data(self, raw_data: dict) -> dict:
         """Process raw user data into a standardized format."""
         return {
@@ -30,10 +33,10 @@ class DataProcessor:
             "metadata": {
                 "source": raw_data.get("source", "unknown"),
                 "processed_at": "2024-01-15T10:30:00Z",  # Would be datetime.now() in real code
-                "version": "1.0"
-            }
+                "version": "1.0",
+            },
         }
-    
+
     def aggregate_sales_data(self, sales_records: list) -> dict:
         """Aggregate sales data into summary statistics."""
         if not sales_records:
@@ -42,13 +45,13 @@ class DataProcessor:
                 "total_revenue": 0.0,
                 "average_sale": 0.0,
                 "product_breakdown": {},
-                "date_range": None
+                "date_range": None,
             }
-        
+
         total_sales = len(sales_records)
         total_revenue = sum(record.get("amount", 0) for record in sales_records)
         average_sale = total_revenue / total_sales if total_sales > 0 else 0
-        
+
         # Product breakdown
         product_breakdown = {}
         for record in sales_records:
@@ -57,30 +60,30 @@ class DataProcessor:
                 product_breakdown[product] = {"count": 0, "revenue": 0.0}
             product_breakdown[product]["count"] += 1
             product_breakdown[product]["revenue"] += record.get("amount", 0)
-        
+
         # Date range
         dates = [record.get("date") for record in sales_records if record.get("date")]
         date_range = {
             "start": min(dates) if dates else None,
-            "end": max(dates) if dates else None
+            "end": max(dates) if dates else None,
         }
-        
+
         return {
             "total_sales": total_sales,
             "total_revenue": round(total_revenue, 2),
             "average_sale": round(average_sale, 2),
             "product_breakdown": product_breakdown,
-            "date_range": date_range
+            "date_range": date_range,
         }
 
 
 def test_user_data_processing():
     """Test user data processing with baseline comparison."""
     print("=== Test: User Data Processing ===")
-    
+
     generator = BaselineGenerator("examples/test_baselines/automation")
     processor = DataProcessor()
-    
+
     # Test data
     raw_user_data = {
         "id": 12345,
@@ -89,21 +92,23 @@ def test_user_data_processing():
         "email": "ALICE.JOHNSON@EXAMPLE.COM",
         "verified": True,
         "type": "premium",
-        "source": "web_signup"
+        "source": "web_signup",
     }
-    
+
     # Process the data
     processed_data = processor.process_user_data(raw_user_data)
-    
+
     try:
-        generator.test_against_baseline("processed_user_data", processed_data, create_if_missing=True)
+        generator.test_against_baseline(
+            "processed_user_data", processed_data, create_if_missing=True
+        )
         print("✓ User data processing test passed")
         return True
     except BaselineNotFoundError as e:
         print(f"✓ User processing baseline created: {e.baseline_path}")
         return True
     except BaselineComparisonError as e:
-        print(f"✗ User data processing test failed:")
+        print("✗ User data processing test failed:")
         for diff in e.differences:
             print(f"   - {diff}")
         return False
@@ -112,31 +117,33 @@ def test_user_data_processing():
 def test_sales_aggregation():
     """Test sales data aggregation with baseline comparison."""
     print("\n=== Test: Sales Data Aggregation ===")
-    
+
     generator = BaselineGenerator("examples/test_baselines/automation")
     processor = DataProcessor()
-    
+
     # Test data
     sales_records = [
         {"product": "Widget A", "amount": 29.99, "date": "2024-01-10"},
         {"product": "Widget B", "amount": 39.99, "date": "2024-01-11"},
         {"product": "Widget A", "amount": 29.99, "date": "2024-01-12"},
         {"product": "Widget C", "amount": 49.99, "date": "2024-01-13"},
-        {"product": "Widget B", "amount": 39.99, "date": "2024-01-14"}
+        {"product": "Widget B", "amount": 39.99, "date": "2024-01-14"},
     ]
-    
+
     # Aggregate the data
     aggregated_data = processor.aggregate_sales_data(sales_records)
-    
+
     try:
-        generator.test_against_baseline("aggregated_sales_data", aggregated_data, create_if_missing=True)
+        generator.test_against_baseline(
+            "aggregated_sales_data", aggregated_data, create_if_missing=True
+        )
         print("✓ Sales aggregation test passed")
         return True
     except BaselineNotFoundError as e:
         print(f"✓ Sales aggregation baseline created: {e.baseline_path}")
         return True
     except BaselineComparisonError as e:
-        print(f"✗ Sales aggregation test failed:")
+        print("✗ Sales aggregation test failed:")
         for diff in e.differences:
             print(f"   - {diff}")
         return False
@@ -145,23 +152,25 @@ def test_sales_aggregation():
 def test_empty_sales_data():
     """Test edge case: empty sales data."""
     print("\n=== Test: Empty Sales Data ===")
-    
+
     generator = BaselineGenerator("examples/test_baselines/automation")
     processor = DataProcessor()
-    
+
     # Test with empty data
     empty_sales = []
     aggregated_empty = processor.aggregate_sales_data(empty_sales)
-    
+
     try:
-        generator.test_against_baseline("empty_sales_data", aggregated_empty, create_if_missing=True)
+        generator.test_against_baseline(
+            "empty_sales_data", aggregated_empty, create_if_missing=True
+        )
         print("✓ Empty sales data test passed")
         return True
     except BaselineNotFoundError as e:
         print(f"✓ Empty sales baseline created: {e.baseline_path}")
         return True
     except BaselineComparisonError as e:
-        print(f"✗ Empty sales data test failed:")
+        print("✗ Empty sales data test failed:")
         for diff in e.differences:
             print(f"   - {diff}")
         return False
@@ -170,10 +179,10 @@ def test_empty_sales_data():
 def test_regression_scenario():
     """Simulate a regression test where the logic changes."""
     print("\n=== Test: Regression Detection ===")
-    
+
     generator = BaselineGenerator("examples/test_baselines/automation")
     processor = DataProcessor()
-    
+
     # Original user data
     user_data = {
         "id": 98765,
@@ -181,26 +190,27 @@ def test_regression_scenario():
         "last_name": "Smith",
         "email": "bob.smith@example.com",
         "verified": False,
-        "type": "standard"
+        "type": "standard",
     }
-    
+
     processed = processor.process_user_data(user_data)
-    
+
     # First, create/verify the baseline
     try:
-        generator.test_against_baseline("user_regression_test", processed, create_if_missing=True)
+        generator.test_against_baseline(
+            "user_regression_test", processed, create_if_missing=True
+        )
         print("✓ Regression baseline established")
     except BaselineNotFoundError:
         print("✓ Regression baseline created")
     except BaselineComparisonError:
         print("✗ Unexpected baseline mismatch")
         return False
-    
-    # Now simulate a change in the processing logic
-    # Let's say the developer accidentally changed the email processing
-    original_email = processed["email"]
-    processed["email"] = processed["email"].upper()  # This would be a bug - emails should be lowercase
-    
+
+    processed["email"] = processed[
+        "email"
+    ].upper()  # This would be a bug - emails should be lowercase
+
     try:
         generator.test_against_baseline("user_regression_test", processed)
         print("✗ Regression not detected - this would be a test failure!")
@@ -215,14 +225,14 @@ def test_regression_scenario():
 def run_test_suite():
     """Run all tests and provide a summary."""
     print("=== Baseline Generator Test Automation Example ===\n")
-    
+
     tests = [
         ("User Data Processing", test_user_data_processing),
         ("Sales Data Aggregation", test_sales_aggregation),
         ("Empty Sales Data", test_empty_sales_data),
-        ("Regression Detection", test_regression_scenario)
+        ("Regression Detection", test_regression_scenario),
     ]
-    
+
     results = []
     for test_name, test_func in tests:
         try:
@@ -231,27 +241,27 @@ def run_test_suite():
         except Exception as e:
             print(f"✗ {test_name} crashed: {e}")
             results.append((test_name, False))
-    
+
     # Summary
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("TEST SUMMARY")
-    print("="*50)
-    
+    print("=" * 50)
+
     passed = sum(1 for _, result in results if result)
     total = len(results)
-    
+
     for test_name, result in results:
         status = "PASS" if result else "FAIL"
         print(f"{status:4} | {test_name}")
-    
-    print("-"*50)
+
+    print("-" * 50)
     print(f"Total: {passed}/{total} tests passed")
-    
+
     if passed == total:
         print("🎉 All tests passed!")
     else:
         print("❌ Some tests failed - check output above")
-    
+
     print("\n=== Benefits of Using Baseline Generator for Testing ===")
     print("- Automatic regression detection")
     print("- Clear difference reporting")
@@ -259,7 +269,7 @@ def run_test_suite():
     print("- Version control friendly (JSON files)")
     print("- Handles complex nested data structures")
     print("- Integrates well with existing test frameworks")
-    
+
     return passed == total
 
 
@@ -309,7 +319,7 @@ def test_api_response_baseline(baseline_generator):
     except BaselineComparisonError as e:
         pytest.fail(f"API response format changed: {e.differences}")
 '''
-    
+
     print("\n=== Pytest Integration Example ===")
     print(example_code)
 
@@ -317,6 +327,6 @@ def test_api_response_baseline(baseline_generator):
 if __name__ == "__main__":
     success = run_test_suite()
     pytest_example()
-    
+
     if not success:
-        sys.exit(1) 
+        sys.exit(1)

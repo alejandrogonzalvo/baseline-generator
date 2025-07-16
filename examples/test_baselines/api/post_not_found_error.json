@@ -1,0 +1,18 @@
+{
+  "error": {
+    "code": "POST_NOT_FOUND",
+    "message": "Post with ID 999 was not found",
+    "details": {
+      "resource": "post",
+      "id": 999,
+      "suggestions": [
+        "Check if the post ID is correct",
+        "Verify the post exists and is published"
+      ]
+    }
+  },
+  "meta": {
+    "request_id": "req_xyz789",
+    "timestamp": "2024-01-15T10:30:00Z"
+  }
+}

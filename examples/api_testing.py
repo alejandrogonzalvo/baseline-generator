@@ -11,7 +11,6 @@ This example demonstrates how to use the baseline generator for:
 
 import sys
 from pathlib import Path
-from datetime import datetime
 from typing import Union
 
 # Add the parent directory to the path so we can import baseline_generator

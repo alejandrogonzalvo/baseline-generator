@@ -1,0 +1,45 @@
+{
+  "items": [
+    {
+      "type": "string",
+      "value": "hello"
+    },
+    {
+      "type": "number",
+      "value": 42
+    },
+    {
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "type": "null",
+      "value": null
+    },
+    {
+      "type": "array",
+      "value": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "type": "object",
+      "value": {
+        "nested": "data"
+      }
+    }
+  ],
+  "summary": {
+    "total_items": 6,
+    "types_present": [
+      "string",
+      "number",
+      "boolean",
+      "null",
+      "array",
+      "object"
+    ]
+  }
+}

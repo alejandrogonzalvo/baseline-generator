@@ -1,0 +1,23 @@
+{
+  "total_sales": 5,
+  "total_revenue": 189.95,
+  "average_sale": 37.99,
+  "product_breakdown": {
+    "Widget A": {
+      "count": 2,
+      "revenue": 59.98
+    },
+    "Widget B": {
+      "count": 2,
+      "revenue": 79.98
+    },
+    "Widget C": {
+      "count": 1,
+      "revenue": 49.99
+    }
+  },
+  "date_range": {
+    "start": "2024-01-10",
+    "end": "2024-01-14"
+  }
+}

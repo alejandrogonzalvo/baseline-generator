@@ -1,0 +1,21 @@
+{
+  "empty_dict": {},
+  "empty_list": [],
+  "null_value": null,
+  "zero_number": 0,
+  "empty_string": "",
+  "boolean_false": false,
+  "list_with_empties": [
+    null,
+    "",
+    0,
+    false,
+    {},
+    []
+  ],
+  "unicode_strings": [
+    "Hello 世界",
+    "Café ☕",
+    "🚀 Rocket"
+  ]
+}
