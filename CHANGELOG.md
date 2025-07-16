@@ -32,4 +32,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial project structure with Poetry
 - Basic BaselineGenerator class
 - Command-line interface
-- Documentation and README 
+- Documentation and README
