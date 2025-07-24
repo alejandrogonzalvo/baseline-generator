@@ -20,6 +20,16 @@ def main() -> None:
         default="tests",
         help="Path to the test folder (default: tests)",
     )
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Disable colored output",
+    )
+    parser.add_argument(
+        "--color",
+        action="store_true",
+        help="Force colored output (overrides auto-detection)",
+    )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -59,7 +69,15 @@ def main() -> None:
         parser.print_help()
         sys.exit(1)
 
-    generator = BaselineGenerator(args.test_folder)
+    # Determine color setting
+    colors = None
+    if args.no_color:
+        colors = False
+    elif args.color:
+        colors = True
+    # If neither is specified, auto-detect (colors=None)
+
+    generator = BaselineGenerator(args.test_folder, colors=colors)
 
     try:
         if args.command == "check":
@@ -131,8 +149,13 @@ def main() -> None:
         print(f"❌ {e.message}")
         print("\nDifferences found:")
         for i, diff in enumerate(e.differences, 1):
-            print(f"  {i}. {diff}")
-        print(f"\nTotal differences: {len(e.differences)}")
+            # Check if this is a multi-line diff (contains newlines)
+            if "\n" in diff:
+                print(f"  {i}. {diff}")
+                print()  # Add extra spacing after multi-line diffs
+            else:
+                print(f"  {i}. {diff}")
+        print(f"Total differences: {len(e.differences)}")
         sys.exit(1)
     except Exception as e:
         print(f"Unexpected error: {e}")

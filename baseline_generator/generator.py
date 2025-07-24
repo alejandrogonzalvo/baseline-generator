@@ -1,8 +1,82 @@
 """Main baseline generator functionality."""
 
+import difflib
 import json
+import os
+import re
+import sys
 from pathlib import Path
 from typing import Any, Union, cast
+
+
+class Colors:
+    """ANSI color codes for terminal output."""
+
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+    RESET = "\033[0m"
+
+    # Class variable to track if colors should be used
+    _colors_enabled = None
+
+    @classmethod
+    def _detect_color_support(cls) -> bool:
+        """Detect if the terminal supports colors."""
+        # Check if we're in a terminal
+        if not sys.stdout.isatty():
+            return False
+
+        # Check environment variables
+        if os.environ.get("NO_COLOR"):
+            return False
+
+        if os.environ.get("FORCE_COLOR"):
+            return True
+
+        # Check TERM environment variable
+        term = os.environ.get("TERM", "")
+        if term == "dumb":
+            return False
+
+        # Most modern terminals support colors
+        if any(
+            term.startswith(prefix) for prefix in ["xterm", "screen", "tmux", "rxvt"]
+        ):
+            return True
+
+        # Check for common terminal emulators
+        if any(var in os.environ for var in ["COLORTERM", "TERM_PROGRAM"]):
+            return True
+
+        # Default to no colors for safety
+        return False
+
+    @classmethod
+    def colors_enabled(cls) -> bool:
+        """Check if colors are enabled."""
+        if cls._colors_enabled is None:
+            cls._colors_enabled = cls._detect_color_support()
+        return cls._colors_enabled
+
+    @classmethod
+    def set_colors_enabled(cls, enabled: bool) -> None:
+        """Manually set whether colors are enabled."""
+        cls._colors_enabled = enabled
+
+    @classmethod
+    def colorize(cls, text: str, color: str) -> str:
+        """Add color to text if colors are enabled."""
+        if cls.colors_enabled():
+            return f"{color}{text}{cls.RESET}"
+        else:
+            return text
 
 
 class BaselineComparisonError(Exception):
@@ -26,13 +100,18 @@ class BaselineNotFoundError(Exception):
 class BaselineGenerator:
     """A class for generating and managing test baselines."""
 
-    def __init__(self, test_folder: Union[str, Path] = "tests") -> None:
+    def __init__(
+        self, test_folder: Union[str, Path] = "tests", colors: bool = None
+    ) -> None:
         """Initialize the BaselineGenerator.
 
         Args:
             test_folder: Path to the test folder where baselines are stored.
+            colors: Whether to use colors in output. If None, auto-detect.
         """
         self.test_folder = Path(test_folder)
+        if colors is not None:
+            Colors.set_colors_enabled(colors)
 
     def check_baseline_exists(self, baseline_name: str) -> bool:
         """Check if a baseline file exists in the test folder.
@@ -359,6 +438,305 @@ class BaselineGenerator:
             differences: List to append differences to.
         """
         if baseline != test_data:
-            differences.append(
-                f"{current_path}: Value mismatch - baseline: {baseline!r}, test: {test_data!r}"
+            # For strings, create a detailed diff if they're long
+            if isinstance(baseline, str) and isinstance(test_data, str):
+                diff_output = self._create_string_diff(
+                    baseline, test_data, current_path
+                )
+                differences.append(diff_output)
+            else:
+                differences.append(
+                    f"{current_path}: Value mismatch - baseline: {baseline!r}, test: {test_data!r}"
+                )
+
+    def _create_string_diff(self, baseline: str, test_data: str, path: str) -> str:
+        """Create a detailed diff for string values.
+
+        Args:
+            baseline: Baseline string value.
+            test_data: Test string value.
+            path: Current path in the data structure.
+
+        Returns:
+            Formatted diff output with colors and context.
+        """
+        # For very short strings, use simple comparison with character highlighting
+        if len(baseline) < 100 and len(test_data) < 100:
+            return self._create_simple_string_diff(baseline, test_data, path)
+
+        # For longer strings, try line-by-line diff first
+        baseline_lines = baseline.splitlines(keepends=True)
+        test_lines = test_data.splitlines(keepends=True)
+
+        # Generate unified diff
+        diff_lines = list(
+            difflib.unified_diff(
+                baseline_lines,
+                test_lines,
+                fromfile="baseline",
+                tofile="test",
+                lineterm="",
+                n=3,  # Show 3 lines of context
             )
+        )
+
+        if not diff_lines:
+            # If no line-by-line diff, show character-by-character diff
+            return self._create_character_diff(baseline, test_data, path)
+
+        # Enhanced: Also show character-level diff for small changes
+        if len(diff_lines) <= 10:  # If the diff is small, also show character-level
+            char_diff = self._create_character_diff(baseline, test_data, path)
+            line_diff = self._colorize_unified_diff(
+                diff_lines, baseline_lines, test_lines
+            )
+            return (
+                f"{path}: String content differs:\n"
+                f"{line_diff}\n"
+                f"  {Colors.colorize('Summary:', Colors.YELLOW)} "
+                f"Baseline: {len(baseline_lines)} lines, Test: {len(test_lines)} lines\n\n"
+                f"{Colors.colorize('Character-level view:', Colors.CYAN)}\n{char_diff}"
+            )
+
+        # For large diffs, just show the line-by-line diff
+        line_diff = self._colorize_unified_diff(diff_lines, baseline_lines, test_lines)
+        return (
+            f"{path}: String content differs:\n"
+            f"{line_diff}\n"
+            f"  {Colors.colorize('Summary:', Colors.YELLOW)} "
+            f"Baseline: {len(baseline_lines)} lines, Test: {len(test_lines)} lines"
+        )
+
+    def _create_simple_string_diff(
+        self, baseline: str, test_data: str, path: str
+    ) -> str:
+        """Create a simple diff for short strings with character highlighting."""
+        # Find the differing parts
+        first_diff = 0
+        while (
+            first_diff < len(baseline)
+            and first_diff < len(test_data)
+            and baseline[first_diff] == test_data[first_diff]
+        ):
+            first_diff += 1
+
+        if first_diff == len(baseline) and first_diff == len(test_data):
+            # Strings are identical (shouldn't happen, but just in case)
+            return f"{path}: Strings are identical"
+
+        # Find the last differing position
+        last_diff_baseline = len(baseline) - 1
+        last_diff_test = len(test_data) - 1
+
+        while (
+            last_diff_baseline >= first_diff
+            and last_diff_test >= first_diff
+            and baseline[last_diff_baseline] == test_data[last_diff_test]
+        ):
+            last_diff_baseline -= 1
+            last_diff_test -= 1
+
+        # Create highlighted versions
+        baseline_before = baseline[:first_diff]
+        baseline_diff = (
+            baseline[first_diff : last_diff_baseline + 1]
+            if first_diff <= last_diff_baseline
+            else ""
+        )
+        baseline_after = (
+            baseline[last_diff_baseline + 1 :]
+            if last_diff_baseline + 1 < len(baseline)
+            else ""
+        )
+
+        test_before = test_data[:first_diff]
+        test_diff = (
+            test_data[first_diff : last_diff_test + 1]
+            if first_diff <= last_diff_test
+            else ""
+        )
+        test_after = (
+            test_data[last_diff_test + 1 :]
+            if last_diff_test + 1 < len(test_data)
+            else ""
+        )
+
+        if Colors.colors_enabled():
+            highlighted_baseline = (
+                baseline_before
+                + Colors.colorize(baseline_diff, Colors.RED + Colors.BOLD)
+                + baseline_after
+            )
+
+            highlighted_test = (
+                test_before
+                + Colors.colorize(test_diff, Colors.GREEN + Colors.BOLD)
+                + test_after
+            )
+
+            # For colored output, we need to show the strings clearly
+            # Add quotes around the content but don't use repr()
+            baseline_display = f"'{highlighted_baseline}'"
+            test_display = f"'{highlighted_test}'"
+        else:
+            # Use brackets and markers for non-color terminals
+            highlighted_baseline = (
+                baseline_before + f"<<<{baseline_diff}>>>" + baseline_after
+            )
+            highlighted_test = test_before + f"<<<{test_diff}>>>" + test_after
+
+            # For non-colored output, use repr() to show special characters
+            baseline_display = repr(highlighted_baseline)
+            test_display = repr(highlighted_test)
+
+        baseline_label = (
+            Colors.colorize("- Baseline:", Colors.RED)
+            if Colors.colors_enabled()
+            else "- Baseline:"
+        )
+        test_label = (
+            Colors.colorize("+ Test:", Colors.GREEN)
+            if Colors.colors_enabled()
+            else "+ Test:"
+        )
+
+        return (
+            f"{path}: String mismatch:\n"
+            f"  {baseline_label} {baseline_display}\n"
+            f"  {test_label}     {test_display}"
+        )
+
+    def _colorize_unified_diff(
+        self, diff_lines: list[str], baseline_lines: list[str], test_lines: list[str]
+    ) -> str:
+        """Colorize the unified diff output."""
+        if not Colors.colors_enabled():
+            # Return plain diff when colors are disabled
+            return "\n".join(diff_lines)
+
+        colored_diff = []
+        for line in diff_lines:
+            if line.startswith("---") or line.startswith("+++"):
+                colored_diff.append(Colors.colorize(line, Colors.BOLD))
+            elif line.startswith("@@"):
+                colored_diff.append(Colors.colorize(line, Colors.CYAN))
+            elif line.startswith("-"):
+                colored_diff.append(Colors.colorize(line, Colors.RED))
+            elif line.startswith("+"):
+                colored_diff.append(Colors.colorize(line, Colors.GREEN))
+            else:
+                colored_diff.append(line)
+
+        return "\n".join(colored_diff)
+
+    def _create_character_diff(self, baseline: str, test_data: str, path: str) -> str:
+        """Create a character-by-character diff for strings without line breaks.
+
+        Args:
+            baseline: Baseline string value.
+            test_data: Test string value.
+            path: Current path in the data structure.
+
+        Returns:
+            Formatted character diff output.
+        """
+        # Find the first and last differing positions
+        first_diff = 0
+        while (
+            first_diff < len(baseline)
+            and first_diff < len(test_data)
+            and baseline[first_diff] == test_data[first_diff]
+        ):
+            first_diff += 1
+
+        last_diff_baseline = len(baseline) - 1
+        last_diff_test = len(test_data) - 1
+
+        while (
+            last_diff_baseline >= first_diff
+            and last_diff_test >= first_diff
+            and baseline[last_diff_baseline] == test_data[last_diff_test]
+        ):
+            last_diff_baseline -= 1
+            last_diff_test -= 1
+
+        # Show context around the difference
+        context_size = 50
+        start_baseline = max(0, first_diff - context_size)
+        end_baseline = min(len(baseline), last_diff_baseline + context_size + 1)
+        start_test = max(0, first_diff - context_size)
+        end_test = min(len(test_data), last_diff_test + context_size + 1)
+
+        baseline_context = baseline[start_baseline:end_baseline]
+        test_context = test_data[start_test:end_test]
+
+        # Highlight the different parts within the context
+        if first_diff < len(baseline):
+            diff_start_in_context = first_diff - start_baseline
+            diff_end_in_context = last_diff_baseline + 1 - start_baseline
+
+            baseline_before = baseline_context[:diff_start_in_context]
+            baseline_diff = baseline_context[diff_start_in_context:diff_end_in_context]
+            baseline_after = baseline_context[diff_end_in_context:]
+
+            if Colors.colors_enabled():
+                highlighted_baseline = (
+                    baseline_before
+                    + Colors.colorize(baseline_diff, Colors.RED + Colors.BOLD)
+                    + baseline_after
+                )
+            else:
+                highlighted_baseline = (
+                    baseline_before + f"<<<{baseline_diff}>>>" + baseline_after
+                )
+        else:
+            highlighted_baseline = baseline_context
+
+        if first_diff < len(test_data):
+            diff_start_in_context = first_diff - start_test
+            diff_end_in_context = last_diff_test + 1 - start_test
+
+            test_before = test_context[:diff_start_in_context]
+            test_diff = test_context[diff_start_in_context:diff_end_in_context]
+            test_after = test_context[diff_end_in_context:]
+
+            if Colors.colors_enabled():
+                highlighted_test = (
+                    test_before
+                    + Colors.colorize(test_diff, Colors.GREEN + Colors.BOLD)
+                    + test_after
+                )
+            else:
+                highlighted_test = test_before + f"<<<{test_diff}>>>" + test_after
+        else:
+            highlighted_test = test_context
+
+        # Add ellipsis if content is truncated
+        baseline_prefix = "..." if start_baseline > 0 else ""
+        baseline_suffix = "..." if end_baseline < len(baseline) else ""
+        test_prefix = "..." if start_test > 0 else ""
+        test_suffix = "..." if end_test < len(test_data) else ""
+
+        baseline_label = (
+            Colors.colorize("- Baseline:", Colors.RED)
+            if Colors.colors_enabled()
+            else "- Baseline:"
+        )
+        test_label = (
+            Colors.colorize("+ Test:", Colors.GREEN)
+            if Colors.colors_enabled()
+            else "+ Test:"
+        )
+        info_label = (
+            Colors.colorize("Info:", Colors.YELLOW)
+            if Colors.colors_enabled()
+            else "Info:"
+        )
+
+        return (
+            f"{path}: String differs at position {first_diff}:\n"
+            f"  {baseline_label} {baseline_prefix}{highlighted_baseline}{baseline_suffix}\n"
+            f"  {test_label}     {test_prefix}{highlighted_test}{test_suffix}\n"
+            f"  {info_label} "
+            f"Baseline length: {len(baseline)}, Test length: {len(test_data)}"
+        )
